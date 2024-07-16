@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer API</title>
+</head>
+<body>
+    <h1>Dashboard</h1>
+
+    <h2>Get Api Key of dummy Customers Details</h2>
+
+    <button onclick="show()">Generate_Api</button>
+    <div id="form" style="display: none;">
+        <form action="" method="post">
+            {% csrf_token %}
+            {{form.as_p}}
+            <button type="submit">generate</button>
+        </form>
+    </div>
+
+    <div>
+        {% if api_key %}
+            <p>customer api key : {{api_key}}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function show(){
+            var form = document.getElementById('form')
+            form.style.display = 'flex'
+        }
+    </script>
+</body>
+</html>
