@@ -29,7 +29,7 @@ class userViewSet(viewsets.ModelViewSet):
             user_name = user.get('username')
             password = user.get('password')
             serializer = userSerializer(data = user)
-        elif len(request) > 0:
+        elif request.data:
             user_name = request.data.get('username')
             password = request.data.get('password')
             serializer = userSerializer(data = request.data)
@@ -71,9 +71,9 @@ class customerDetailViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
 
-class customerViewSetNew(viewsets.ModelViewSet):
+class customerViewSet1(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
-    serializer_class = customerWithBillSerializer
+    serializer_class = customerSerializer
 
     # authentication_classes = [TokenAuthentication]
     # permission_classes = [IsAuthenticated]
@@ -85,11 +85,11 @@ class customerViewSetNew(viewsets.ModelViewSet):
         # print("Full URL:", full_url)
         
         # Access the URL path and query string
-        url_path = request.get_full_path()
+        # url_path = request.get_full_path()
         print(request)
-        print("URL Path and Query String:", url_path)
+        # print("URL Path and Query String:", url_path)
 
-        token_key = url_path[14:-1]
+        token_key = request.GET.get('api-key')
         print(token_key)
         # token_key = request.query_params.get('token')
         if not token_key:
@@ -107,6 +107,96 @@ class customerViewSetNew(viewsets.ModelViewSet):
 
         return super().dispatch(request, *args, **kwargs)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        limit = self.request.GET.get('limit')
+
+        if limit:
+            try:
+                limit = int(limit)
+                if limit > 0:
+                    queryset = queryset[:limit]
+            except ValueError:
+                pass
+        
+        return queryset
+
+
+class billViewSet1(viewsets.ModelViewSet):
+    queryset = Bill.objects.all()
+    serializer_class = billSerializer
+
+    def dispatch(self, request):
+        token_key = request.GET.get('api-key')
+
+        if not token_key:
+            raise AuthenticationFailed(_('no api-key provided'))
+
+        try:
+            token = Token.objects.get(key=token_key)
+        except Token.DoesNotExist:
+            raise AuthenticationFailed(_('invalid api-key'))
+
+        if not token.user.is_active:
+            raise AuthenticationFailed(_('user is inactive or deleted'))
+
+        request.user = token.user
+
+        return super().dispatch(request)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        limit = self.request.GET.get('limit')
+
+        if limit:
+            try:
+                limit = int(limit)
+                if limit > 0:   
+                    queryset = queryset[:limit]
+            except ValueError:
+                pass
+        
+        return queryset
+
+
+class customerDetailViewSet1(viewsets.ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = customerWithBillSerializer
+
+    def dispatch(self, request):
+        token_key = request.GET.get('api-key')
+
+        if not token_key:
+            raise AuthenticationFailed(_("api key not provided!"))
+
+        try:
+            token = Token.objects.get(key = token_key)
+        except Token.DoesNotExist:
+            raise AuthenticationFailed(_('api key is invalid'))
+
+        if not token.user.is_active:
+            raise AuthenticationFailed(_('user is either deleted or inactive'))
+
+        request.user = token.user
+
+        return super().dispatch(request)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        limit = self.request.GET.get('limit')
+
+        if limit:
+            try:
+                limit = int(limit)
+                if limit > 0: 
+                    queryset = queryset[:limit]
+            except ValueError:
+                pass
+        
+        return queryset
 
 
 #views 
@@ -129,9 +219,11 @@ class ApiFormView(FormView):
     def form_valid(self, form):
         user = userViewSet()
         username = form.cleaned_data['username']
+        email = form.cleaned_data['email']
         password = form.cleaned_data['password']
         user_dict = {
             'username':username,
+            'email':email,
             'password':password
         }
 
@@ -139,7 +231,7 @@ class ApiFormView(FormView):
 
         print(response.data)
         token = response.data.get('token')
-        self.api_key = f'localhost:9000/customer-data{token}'
+        self.api_key = token
 
         context = self.get_context_data()
         context['api_key'] = self.api_key

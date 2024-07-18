@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,11 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-+vy*sy#c=euvt-(tv(-5%y@)82q7f+vgbvkrol-u*)y5y%$9^1'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+DEBUG = os.environ.get("DEBUG","Fasle").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split("")
 
 
 # Application definition
@@ -46,6 +49,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,8 +57,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'billing_api_project.urls'
 
@@ -87,6 +92,8 @@ DATABASES = {
     }
 }
 
+database_url = os.environ.get("DATABASE_URL")
+DATABASES['default'] = dj_database_url.parse(database_url)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -151,7 +158,8 @@ SWAGGER_SETTINGS = {
     },
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://127.0.0.1:8000",
+#     "http://localhost:8000",
+#     "http://localhost:5173",
+# ]

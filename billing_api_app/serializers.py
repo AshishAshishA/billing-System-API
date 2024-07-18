@@ -7,13 +7,14 @@ from .models import Customer, Product, Bill, BillItem
 class userSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'password']
+        fields = ['username','email', 'password']
 
     def create(self, validated_data):
         user_name = validated_data.pop('username')
+        email = validated_data.pop('email')
         password = validated_data.pop('password')
 
-        user = User.objects.create(username=user_name, password=password)
+        user = User.objects.create(username=user_name, email=email, password=password)
 
         user.set_password(password)
         user.save()
@@ -43,7 +44,7 @@ class billSerializer(serializers.ModelSerializer):
     billItems = billItemSerializer(many=True)
     class Meta:
         model = Bill
-        fields = ['customer','billItems','total_amount','payment_method','date_created','date_updated']
+        fields = ['id','customer','billItems','total_amount','payment_method','date_created','date_updated']
         read_only_fields = ['total_amount','date_created','date_updated']
 
     def create(self, validated_data):
