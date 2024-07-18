@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
 DEBUG = os.environ.get("DEBUG","Fasle").lower() == "true"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split("")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
 
 
 # Application definition
